@@ -1,8 +1,8 @@
 const DEFAULT_CONFIG = {
   baseUrl: "http://localhost:3000",
   endpoints: {
-    search: "/api/search",
-    suggest: "/api/suggest"
+    search: "/api/products",
+    suggest: "/api/products/suggest"
   },
   debounceMs: 300,
   suggestMinChars: 2,
@@ -199,6 +199,17 @@ function normalizeSearchResponse(payload) {
     });
   }
 
+  if (!items.length && Array.isArray(payload?.hits)) {
+    payload.hits.forEach((hit) => {
+      items.push({
+        id: hit.id,
+        score: hit.score || 0,
+        source: hit,
+        highlight: hit.highlights
+      });
+    });
+  }
+
   const normalized = items.map((item, idx) => {
     const source = item?.source || item?._source || item || {};
     const title = source.title || source.name || source.headline || `Kết quả ${idx + 1}`;
@@ -331,7 +342,7 @@ async function runSuggest(query) {
   const controller = new AbortController();
   state.suggestAbortController = controller;
 
-  const qs = encodeQuery({ q: query, limit: 8, request_cache: false });
+  const qs = encodeQuery({ query: query, limit: 8, request_cache: false });
   const url = `${CONFIG.baseUrl}${CONFIG.endpoints.suggest}?${qs}`;
 
   try {
@@ -386,7 +397,7 @@ async function runSearch(query) {
   resultsMetaEl.textContent = "Đang tải dữ liệu...";
   renderStateCard("Đang tải kết quả, vui lòng chờ.");
 
-  const qs = encodeQuery({ q: trimmed, size: 12, request_cache: false });
+  const qs = encodeQuery({ query: trimmed, size: 12, request_cache: false });
   const url = `${CONFIG.baseUrl}${CONFIG.endpoints.search}?${qs}`;
 
   const startedAt = performance.now();

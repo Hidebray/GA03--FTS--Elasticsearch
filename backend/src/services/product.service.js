@@ -1,4 +1,4 @@
-import client from "../config/elasticsearch.js";
+import { client } from "../config/elasticsearch.js";
 
 const INDEX_NAME = "products";
 
